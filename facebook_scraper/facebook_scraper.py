@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 class FacebookScraper:
     """Class for creating FacebookScraper Iterators"""
 
-    base_url = FB_MOBILE_BASE_URL
+    base_url = FB_MBASIC_BASE_URL
     default_headers = {
         "Accept": "*/*",
         "Connection": "keep-alive",
@@ -120,7 +120,7 @@ class FacebookScraper:
                 url = url.replace(FB_BASE_URL, FB_MBASIC_BASE_URL)
             if url.startswith(FB_W3_BASE_URL):
                 url = url.replace(FB_W3_BASE_URL, FB_MBASIC_BASE_URL)
-            if not url.startswith(FB_MOBILE_BASE_URL):
+            if not url.startswith(FB_MBASIC_BASE_URL):
                 url = utils.urljoin(FB_MBASIC_BASE_URL, url)
 
             post = {"original_request_url": post_url, "post_url": url}
@@ -209,7 +209,7 @@ class FacebookScraper:
             limit = friend_opt
         friend_url = kwargs.pop("start_url", None)
         if not friend_url:
-            friend_url = utils.urljoin(FB_MOBILE_BASE_URL, f'/{account}/friends/')
+            friend_url = utils.urljoin(FB_MBASIC_BASE_URL, f'/{account}/friends/')
         request_url_callback = kwargs.get('request_url_callback')
         friends_found = 0
         while friend_url:
@@ -252,7 +252,7 @@ class FacebookScraper:
                 return
             more = re.search(r'm_more_friends",href:"([^"]+)"', response.text)
             if more:
-                friend_url = utils.urljoin(FB_MOBILE_BASE_URL, more.group(1))
+                friend_url = utils.urljoin(FB_MBASIC_BASE_URL, more.group(1))
                 if request_url_callback:
                     request_url_callback(friend_url)
             else:
@@ -271,7 +271,7 @@ class FacebookScraper:
                     if action['cmd'] == 'append' and action['html']:
                         element = utils.make_html_element(
                             action['html'],
-                            url=FB_MOBILE_BASE_URL,
+                            url=FB_MBASIC_BASE_URL,
                         )
                         elems = element.find('a.touchable')
                         html = element.text
@@ -402,7 +402,7 @@ class FacebookScraper:
                 if profpic:
                     result["profile_picture"] = profpic.attrs["src"]
 
-        about_url = utils.urljoin(FB_MOBILE_BASE_URL, f'/{account}/about/')
+        about_url = utils.urljoin(FB_MBASIC_BASE_URL, f'/{account}/about/')
         logger.debug(f"Requesting page from: {about_url}")
         response = self.get(about_url)
         match = re.search(r'entity_id:(\d+)', response.html.html)
@@ -499,7 +499,7 @@ class FacebookScraper:
         # Likes
         if result.get("id") and kwargs.get("likes"):
             likes_url = utils.urljoin(
-                FB_MOBILE_BASE_URL,
+                FB_MBASIC_BASE_URL,
                 f'timeline/app_section/?section_token={result["id"]}:2409997254',
             )
             logger.debug(f"Requesting page from: {likes_url}")
@@ -513,7 +513,7 @@ class FacebookScraper:
                 result["likes_by_category"][category] = count
 
             all_likes_url = utils.urljoin(
-                FB_MOBILE_BASE_URL,
+                FB_MBASIC_BASE_URL,
                 f'timeline/app_collection/?collection_token={result["id"]}:2409997254:96',
             )
             logger.debug(f"Requesting page from: {all_likes_url}")
@@ -538,7 +538,7 @@ class FacebookScraper:
                     if action['cmd'] == 'append' and action['html']:
                         element = utils.make_html_element(
                             action['html'],
-                            url=FB_MOBILE_BASE_URL,
+                            url=FB_MBASIC_BASE_URL,
                         )
                         for elem in element.find("div._1a5p"):
                             result["likes"].append(
@@ -569,7 +569,7 @@ class FacebookScraper:
                     if action['cmd'] == 'replace' and action['html']:
                         element = utils.make_html_element(
                             action['html'],
-                            url=FB_MOBILE_BASE_URL,
+                            url=FB_MBASIC_BASE_URL,
                         )
                         elems = element.find('#page_suggestions_on_liking ~ div')
                     elif action['cmd'] == 'script':
@@ -867,7 +867,7 @@ class FacebookScraper:
             self.request_count += 1
             url = str(url)
             if not url.startswith("http"):
-                url = utils.urljoin(FB_MOBILE_BASE_URL, url)
+                url = utils.urljoin(FB_MBASIC_BASE_URL, url)
 
             if kwargs.get("post"):
                 kwargs.pop("post")
@@ -890,7 +890,7 @@ class FacebookScraper:
                 post_url = re.search("\d+", url).group()
                 if post_url:
                     url = utils.urljoin(
-                        FB_MOBILE_BASE_URL,
+                        FB_MBASIC_BASE_URL,
                         f"story.php?story_fbid={post_url}&id=1&m_entstream_source=timeline",
                     )
                     post = {"original_request_url": post_url, "post_url": url}
@@ -905,7 +905,7 @@ class FacebookScraper:
             if "cookie/consent-page" in response.url:
                 response = self.submit_form(response)
             if (
-                response.url.startswith(FB_MOBILE_BASE_URL)
+                response.url.startswith(FB_MBASIC_BASE_URL)
                 and not response.html.find("script", first=True)
                 and "script" not in response.html.html
                 and self.session.cookies.get("noscript") != "1"
@@ -941,7 +941,7 @@ class FacebookScraper:
                     raise exceptions.AccountDisabled("Your Account Has Been Locked")
                 elif (
                     title.text == "Log in to Facebook | Facebook"
-                    or response.url.startswith(utils.urljoin(FB_MOBILE_BASE_URL, "login"))
+                    or response.url.startswith(utils.urljoin(FB_MBASIC_BASE_URL, "login"))
                     or response.url.startswith(utils.urljoin(FB_W3_BASE_URL, "login"))
                 ):
                     raise exceptions.LoginRequired(
@@ -1126,7 +1126,7 @@ class FacebookScraper:
                     yield post
 
     def get_groups_by_search(self, word: str, **kwargs):
-        group_search_url = utils.urljoin(FB_MOBILE_BASE_URL, f"search/groups/?q={word}")
+        group_search_url = utils.urljoin(FB_MBASIC_BASE_URL, f"search/groups/?q={word}")
         r = self.get(group_search_url)
         for group_element in r.html.find('div[role="button"]'):
             button_id = group_element.attrs["id"]

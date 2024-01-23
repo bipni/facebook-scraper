@@ -592,8 +592,8 @@ class PostExtractor:
         if match:
             url = match.groups()[0].replace("&amp;", "&")
             if not url.startswith("http"):
-                url = utils.urljoin(FB_MOBILE_BASE_URL, url)
-            if url.startswith(utils.urljoin(FB_MOBILE_BASE_URL, "/photo/view_full_size/")):
+                url = utils.urljoin(FB_MBASIC_BASE_URL, url)
+            if url.startswith(utils.urljoin(FB_MBASIC_BASE_URL, "/photo/view_full_size/")):
                 # Try resolve redirect
                 logger.debug(f"Fetching {url}")
                 try:
@@ -658,7 +658,7 @@ class PostExtractor:
                         image_ids.append(node["id"])
                     else:
                         url = node["url"]
-                        url = url.replace(FB_W3_BASE_URL, FB_MOBILE_BASE_URL)
+                        url = url.replace(FB_W3_BASE_URL, FB_MBASIC_BASE_URL)
                         logger.debug(f"Fetching {url}")
                         response = self.request(url)
                         images.append(self.extract_photo_link_HQ(response.text))
@@ -675,7 +675,7 @@ class PostExtractor:
                     "video_ids": video_ids,
                     "videos": videos,
                 }
-            url = utils.urljoin(FB_MOBILE_BASE_URL, url)
+            url = utils.urljoin(FB_MBASIC_BASE_URL, url)
             logger.debug(f"Fetching {url}")
             try:
                 response = self.request(url)
@@ -698,7 +698,7 @@ class PostExtractor:
                 "href"
             ]
             if not url.startswith("http"):
-                url = utils.urljoin(FB_MOBILE_BASE_URL, url)
+                url = utils.urljoin(FB_MBASIC_BASE_URL, url)
             logger.debug(f"Fetching {url}")
             response = self.request(url)
             photo_link = self.extract_photo_link_HQ(response.text)
@@ -779,7 +779,7 @@ class PostExtractor:
             }
         more = response.html.find("div[id^=reaction_profile_pager] a", first=True)
         while more and len(elems) < limit:
-            url = utils.urljoin(FB_MOBILE_BASE_URL, more.attrs.get("href"))
+            url = utils.urljoin(FB_MBASIC_BASE_URL, more.attrs.get("href"))
             logger.debug(f"Fetching {url}")
             try:
                 response = self.request(url)
@@ -793,7 +793,7 @@ class PostExtractor:
                 if action['cmd'] == 'append':
                     html = utils.make_html_element(
                         f"<div id='reaction_profile_browser'>{action['html']}</div>",
-                        url=FB_MOBILE_BASE_URL,
+                        url=FB_MBASIC_BASE_URL,
                     )
                     elems = html.find(
                         'div#reaction_profile_browser>div,div#reaction_profile_browser1>div'
@@ -834,7 +834,7 @@ class PostExtractor:
                 elif action['cmd'] == 'replace':
                     html = utils.make_html_element(
                         f"<div id='reaction_profile_browser'>{action['html']}</div>",
-                        url=FB_MOBILE_BASE_URL,
+                        url=FB_MBASIC_BASE_URL,
                     )
                     more = html.find("div#reaction_profile_pager a", first=True)
 
@@ -1232,7 +1232,7 @@ class PostExtractor:
                 if action["cmd"] == "replace":
                     html = utils.make_html_element(
                         action['html'],
-                        url=FB_MOBILE_BASE_URL,
+                        url=FB_MBASIC_BASE_URL,
                     )
                     break
 
@@ -1341,7 +1341,7 @@ class PostExtractor:
 
         while more_url and len(comments) <= limit:
             if request_url_callback:
-                request_url_callback(utils.urljoin(FB_MOBILE_BASE_URL, more_url))
+                request_url_callback(utils.urljoin(FB_MBASIC_BASE_URL, more_url))
             if more_url in visited_urls:
                 logger.debug("cycle detected, break")
                 break
@@ -1502,7 +1502,7 @@ class PhotoPostExtractor(PostExtractor):
             return {"user_id": match.group(1)}
 
     def extract_post_url(self) -> PartialPost:
-        return {"post_url": utils.urljoin(FB_MOBILE_BASE_URL, self.extract_post_id()["post_id"])}
+        return {"post_url": utils.urljoin(FB_MBASIC_BASE_URL, self.extract_post_id()["post_id"])}
 
     def extract_post_id(self) -> PartialPost:
         try:
