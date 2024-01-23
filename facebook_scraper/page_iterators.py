@@ -2,17 +2,15 @@ import json
 import logging
 import re
 import textwrap
-from typing import Iterator, Optional, Union
 import time
+import warnings
+from typing import Iterator, Optional, Union
 
 from requests.exceptions import HTTPError
-import warnings
 
-from . import utils
-from .constants import FB_MOBILE_BASE_URL, FB_MBASIC_BASE_URL
-
+from . import exceptions, utils
+from .constants import FB_MBASIC_BASE_URL, FB_MOBILE_BASE_URL
 from .fb_types import URL, Page, RawPage, RequestFunction, Response
-from . import exceptions
 from .internal_classes import PageClass
 
 logger = logging.getLogger(__name__)
@@ -32,7 +30,7 @@ def iter_hashtag_pages(hashtag: str, request_fn: RequestFunction, **kwargs) -> I
 def iter_pages(account: str, request_fn: RequestFunction, **kwargs) -> Iterator[Page]:
     start_url = kwargs.pop("start_url", None)
     if not start_url:
-        start_url = utils.urljoin(FB_MOBILE_BASE_URL, f'/{account}', )
+        start_url = utils.urljoin(FB_MBASIC_BASE_URL, f'/{account}', )
     return generic_iter_pages(start_url, PageParser, request_fn, **kwargs)
 
 
@@ -42,7 +40,7 @@ def iter_group_pages(
     start_url = kwargs.pop("start_url", None)
 
     if not start_url:
-        start_url = utils.urljoin(FB_MOBILE_BASE_URL, f'groups/{group}/')
+        start_url = utils.urljoin(FB_MBASIC_BASE_URL, f'groups/{group}/')
 
     return generic_iter_pages(start_url, GroupPageParser, request_fn, **kwargs)
 
@@ -51,7 +49,7 @@ def iter_search_pages(word: str, request_fn: RequestFunction, **kwargs) -> Itera
     start_url = kwargs.pop("start_url", None)
     if not start_url:
         start_url = utils.urljoin(
-            FB_MOBILE_BASE_URL,
+            FB_MBASIC_BASE_URL,
             f'/search/posts?q={word}'
             f'&filters=eyJyZWNlbnRfcG9zdHM6MCI6IntcIm5hbWVcIjpcInJlY2VudF9wb3N0c1wiLFwiYXJnc1wiOlwiXCJ9In0%3D',
         )
@@ -59,12 +57,12 @@ def iter_search_pages(word: str, request_fn: RequestFunction, **kwargs) -> Itera
             request_fn(start_url)
         except Exception as ex:
             logger.error(ex)
-            start_url = utils.urljoin(FB_MOBILE_BASE_URL, f'/search/posts?q={word}')
+            start_url = utils.urljoin(FB_MBASIC_BASE_URL, f'/search/posts?q={word}')
     return generic_iter_pages(start_url, SearchPageParser, request_fn, **kwargs)
 
 
 def iter_photos(account: str, request_fn: RequestFunction, **kwargs) -> Iterator[Page]:
-    start_url = utils.urljoin(FB_MOBILE_BASE_URL, f'/{account}/photos/')
+    start_url = utils.urljoin(FB_MBASIC_BASE_URL, f'/{account}/photos/')
     return generic_iter_pages(start_url, PhotosPageParser, request_fn, **kwargs)
 
 
@@ -73,7 +71,7 @@ def generic_iter_pages(
 ) -> Iterator[PageClass]:
     next_url = start_url
 
-    base_url = kwargs.get('base_url', FB_MOBILE_BASE_URL)
+    base_url = kwargs.get('base_url', FB_MBASIC_BASE_URL)
     request_url_callback = kwargs.get('request_url_callback')
     while next_url:
         # Execute callback of starting a new URL request
@@ -138,6 +136,7 @@ class PageParser:
     cursor_regex_5 = re.compile(
         r'href="(/profile/timeline/stream/\?cursor[^"]+)"'
     )  # scroll/cursor based, first request
+
     def __init__(self, response: Response):
         self.response = response
         self.html = None
@@ -209,7 +208,7 @@ class PageParser:
 
         for action in data.get('payload', data)['actions']:
             if action['cmd'] == 'replace':
-                self.html = utils.make_html_element(action['html'], url=FB_MOBILE_BASE_URL)
+                self.html = utils.make_html_element(action['html'], url=FB_MBASIC_BASE_URL)
                 self.cursor_blob = self.html.html
             elif action['cmd'] == 'script':
                 self.cursor_blob = action['code']

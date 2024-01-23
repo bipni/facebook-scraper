@@ -1,19 +1,24 @@
 import itertools
 import json
-import demjson3 as demjson
-from demjson3 import JSONDecodeError
 import logging
 import re
+from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, urlparse
+
+import demjson3 as demjson
+from demjson3 import JSONDecodeError
 from tqdm.auto import tqdm
-from collections import defaultdict
 
-from . import utils, exceptions
-from .constants import FB_BASE_URL, FB_MOBILE_BASE_URL, FB_W3_BASE_URL, FB_MBASIC_BASE_URL
-from .fb_types import Options, Post, RawPost, RequestFunction, Response, URL
-
+from . import exceptions, utils
+from .constants import (
+    FB_BASE_URL,
+    FB_MBASIC_BASE_URL,
+    FB_MOBILE_BASE_URL,
+    FB_W3_BASE_URL,
+)
+from .fb_types import URL, Options, Post, RawPost, RequestFunction, Response
 
 try:
     from youtube_dl import YoutubeDL
@@ -267,9 +272,9 @@ class PostExtractor:
         # we can use an id on the like button to get that
         return {
             'post_id': self.live_data.get("ft_ent_identifier")
-                       or self.data_ft.get('top_level_post_id')
-                       or self.element.find('[id^="like_"]', first=True).attrs.get('id').split('like_')[
-                           1] if self.element.find('[id^="like_"]', first=True) else None
+            or self.data_ft.get('top_level_post_id')
+            or self.element.find('[id^="like_"]', first=True).attrs.get('id').split('like_')[
+                1] if self.element.find('[id^="like_"]', first=True) else None
         }
 
     def extract_username(self) -> PartialPost:
@@ -293,14 +298,12 @@ class PostExtractor:
         if len(story_containers) == 0:
             story_containers = element.find("[data-ft]")
 
-
-
         has_more = self.more_url_regex.search(element.html)
         if has_more and self.full_post_html:
             element = self.full_post_html.find('.story_body_container', first=True)
             if not element and self.full_post_html.find("div.msg", first=True):
                 more_button = self.full_post_html.find(self.post_more_button_selector)
-                returned_text = {};
+                returned_text = {}
                 if len(more_button) > 0:
                     logger.debug(
                         f"found a 'more' button, will send the minimal text notice"
@@ -838,7 +841,7 @@ class PostExtractor:
     def extract_sharers(self):
         """Fetch people sharing an existing post obtained by `get_posts`.
         Note that this method may raise more http requests per post to get all sharers"""
-        share_url = f'https://m.facebook.com/browse/shares?id={self.post.get("post_id")}'
+        share_url = f'https://mbasic.facebook.com/browse/shares?id={self.post.get("post_id")}'
         while share_url:
             logger.debug(f"Fetching {share_url}")
             response = self.request(share_url)
@@ -891,7 +894,7 @@ class PostExtractor:
         reactors_opt = self.options.get("reactors")
         reactors = []
         if reactors_opt:
-            reaction_url = f'https://m.facebook.com/ufi/reaction/profile/browser/?ft_ent_identifier={post_id}'
+            reaction_url = f'https://mbasic.facebook.com/ufi/reaction/profile/browser/?ft_ent_identifier={post_id}'
             logger.debug(f"Fetching {reaction_url}")
             response = self.request(reaction_url)
             if not reactions or force_parse_HTML:
@@ -1142,7 +1145,7 @@ class PostExtractor:
         else:
             date = None
 
-        image_url = comment.find('a[href^="https://lm.facebook.com/l.php"]', first=True)
+        image_url = comment.find('a[href^="https://lmbasic.facebook.com/l.php"]', first=True)
         if image_url:
             image_url = parse_qs(urlparse(image_url.attrs["href"]).query).get("u")[0]
         else:
@@ -1476,8 +1479,8 @@ class PostExtractor:
 class GroupPostExtractor(PostExtractor):
     """Class for extracting posts from Facebook Groups rather than Pages"""
 
-    post_url_regex = re.compile(r'https://m.facebook.com/groups/[^/]+/permalink/')
-    post_story_regex = re.compile(r'href="(https://m.facebook.com/groups/[^/]+/permalink/\d+/)')
+    post_url_regex = re.compile(r'https://mbasic.facebook.com/groups/[^/]+/permalink/')
+    post_story_regex = re.compile(r'href="(https://mbasic.facebook.com/groups/[^/]+/permalink/\d+/)')
 
 
 class PhotoPostExtractor(PostExtractor):

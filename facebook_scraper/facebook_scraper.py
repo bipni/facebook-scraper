@@ -1,45 +1,42 @@
 import itertools
+import json
 import logging
-from urllib.parse import urljoin
-import warnings
+import os
 import re
+import warnings
+from datetime import datetime
 from functools import partial
 from typing import Iterator, Union
-import json
-import demjson3 as demjson
-from urllib.parse import parse_qs, urlparse, unquote
-from datetime import datetime
-import os
+from urllib.parse import parse_qs, unquote, urljoin, urlparse
 
+import demjson3 as demjson
 from requests import RequestException
 from requests_html import HTMLSession
 
-from . import utils
+from . import exceptions, utils
 from .constants import (
     DEFAULT_PAGE_LIMIT,
     FB_BASE_URL,
+    FB_MBASIC_BASE_URL,
     FB_MOBILE_BASE_URL,
     FB_W3_BASE_URL,
-    FB_MBASIC_BASE_URL,
 )
 from .extractors import (
-    extract_group_post,
-    extract_post,
-    extract_photo_post,
-    extract_story_post,
     PostExtractor,
+    extract_group_post,
     extract_hashtag_post,
+    extract_photo_post,
+    extract_post,
+    extract_story_post,
 )
 from .fb_types import Post, Profile
 from .page_iterators import (
     iter_group_pages,
+    iter_hashtag_pages,
     iter_pages,
     iter_photos,
     iter_search_pages,
-    iter_hashtag_pages,
 )
-from . import exceptions
-
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +90,7 @@ class FacebookScraper:
 
     def get_reactors(self, post_id: int, **kwargs) -> Iterator[dict]:
         reaction_url = (
-            f'https://m.facebook.com/ufi/reaction/profile/browser/?ft_ent_identifier={post_id}'
+            f'https://mbasic.facebook.com/ufi/reaction/profile/browser/?ft_ent_identifier={post_id}'
         )
         logger.debug(f"Fetching {reaction_url}")
         response = self.get(reaction_url)
@@ -134,7 +131,7 @@ class FacebookScraper:
             if "/stories/" in url or "/story/" in url:
                 elem = response.html.find("#story_viewer_content", first=True)
             else:
-                #top_level_post_id is not used anymore
+                # top_level_post_id is not used anymore
                 elem = response.html.find('[data-ft]', first=True)
                 if not elem:
                     elem = response.html.find('div.async_like', first=True)
@@ -889,7 +886,7 @@ class FacebookScraper:
             self.check_locale(response)
 
             # Special handling for video posts that redirect to /watch/
-            if response.url == "https://m.facebook.com/watch/?ref=watch_permalink":
+            if response.url == "https://mbasic.facebook.com/watch/?ref=watch_permalink":
                 post_url = re.search("\d+", url).group()
                 if post_url:
                     url = utils.urljoin(
@@ -1143,6 +1140,6 @@ class FacebookScraper:
     def find_group_id(button_id, raw_html):
         """Each group button has an id, which appears later in the script
         tag followed by the group id."""
-        s = raw_html[raw_html.rfind(button_id) :]
-        group_id = s[s.find("result_id:") :].split(",")[0].split(":")[1]
+        s = raw_html[raw_html.rfind(button_id):]
+        group_id = s[s.find("result_id:"):].split(",")[0].split(":")[1]
         return int(group_id)
