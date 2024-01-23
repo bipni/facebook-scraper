@@ -282,7 +282,7 @@ class PostExtractor:
         if elem:
             url = elem.attrs.get("href")
             if url:
-                url = utils.urljoin(FB_BASE_URL, url)
+                url = utils.urljoin(FB_MBASIC_BASE_URL, url)
             return {'username': elem.text, 'user_url': url}
 
     # TODO: this method needs test for the 'has more' case and shared content
@@ -540,7 +540,7 @@ class PostExtractor:
         if path is None:
             return None
 
-        url = utils.urljoin(FB_BASE_URL, path)
+        url = utils.urljoin(FB_MBASIC_BASE_URL, path)
         return {'post_url': url}
 
     # TODO: Remove `or 0` from this methods
@@ -774,7 +774,7 @@ class PostExtractor:
                     reaction_type = None
             yield {
                 "name": elem.find("strong", first=True).text,
-                "link": utils.urljoin(FB_BASE_URL, elem.find("a", first=True).attrs.get("href")),
+                "link": utils.urljoin(FB_MBASIC_BASE_URL, elem.find("a", first=True).attrs.get("href")),
                 "type": reaction_type,
             }
         more = response.html.find("div[id^=reaction_profile_pager] a", first=True)
@@ -827,7 +827,7 @@ class PostExtractor:
                         yield {
                             "name": elem.find("strong", first=True).text,
                             "link": utils.urljoin(
-                                FB_BASE_URL, elem.find("a", first=True).attrs.get("href")
+                                FB_MBASIC_BASE_URL, elem.find("a", first=True).attrs.get("href")
                             ),
                             "type": reaction_type,
                         }
@@ -850,7 +850,7 @@ class PostExtractor:
                 yield {
                     "name": elem.find("strong", first=True).text,
                     "link": utils.urljoin(
-                        FB_BASE_URL, elem.find("a", first=True).attrs.get("href")
+                        FB_MBASIC_BASE_URL, elem.find("a", first=True).attrs.get("href")
                     ),
                 }
             more = response.html.find("#m_more_item a", first=True)
@@ -1110,14 +1110,14 @@ class PostExtractor:
 
             url = profile_picture.element.getparent().attrib.get("href")
             if url:
-                url = utils.urljoin(FB_BASE_URL, url)
+                url = utils.urljoin(FB_MBASIC_BASE_URL, url)
         except AttributeError:
             name = comment.find("h3", first=True).text
             commenter_id = None
             url = None
             link = comment.find("h3>a", first=True)
             if link:
-                url = utils.urljoin(FB_BASE_URL, link.attrs.get("href"))
+                url = utils.urljoin(FB_MBASIC_BASE_URL, link.attrs.get("href"))
         first_link = comment.find(
             "div:not([data-sigil])>a[href]:not([data-click]):not([data-store]):not([data-sigil])",
             first=True,
@@ -1180,7 +1180,7 @@ class PostExtractor:
 
         return {
             "comment_id": comment_id,
-            "comment_url": utils.urljoin(FB_BASE_URL, comment_id),
+            "comment_url": utils.urljoin(FB_MBASIC_BASE_URL, comment_id),
             "commenter_id": commenter_id,
             "commenter_url": url,
             "commenter_name": name,
@@ -1439,10 +1439,10 @@ class PostExtractor:
             url = self.post.get('post_id')
             logger.debug(f"Fetching {url}")
             try:
-                url = self.post.get('post_url').replace(FB_BASE_URL, FB_MBASIC_BASE_URL)
+                url = self.post.get('post_url').replace(FB_MBASIC_BASE_URL, FB_MBASIC_BASE_URL)
                 response = self.request(url)
             except exceptions.NotFound as e:
-                url = self.post.get('post_url').replace(FB_BASE_URL, FB_MBASIC_BASE_URL)
+                url = self.post.get('post_url').replace(FB_MBASIC_BASE_URL, FB_MBASIC_BASE_URL)
                 logger.debug(f"Fetching {url}")
                 response = self.request(url)
             if response.text.startswith("for (;;)"):
@@ -1537,7 +1537,7 @@ class StoryExtractor(PostExtractor):
         if elem:
             url = elem.find("a", first=True).attrs["href"]
             if url:
-                url = utils.urljoin(FB_BASE_URL, url)
+                url = utils.urljoin(FB_MBASIC_BASE_URL, url)
             return {'username': elem.find("div.overflowText", first=True).text, 'user_url': url}
 
     def extract_time(self) -> PartialPost:
